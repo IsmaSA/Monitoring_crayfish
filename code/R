@@ -1,0 +1,457 @@
+
+setwd("C:/Users/isotoalmena/Desktop")
+df = readxl::read_excel('Fail_crayfish.xlsx', sheet = 'Sheet 1')
+head(df)
+df %>% filter(Alien =="Y")  %>% summarise(r= n_distinct(site_id),
+                                          occ=n())
+
+str(df)
+
+library(ggplot2)
+df1= df %>% group_by(Method) %>% summarise(Count=n())
+
+df1 %>%
+  ggplot(aes(x = factor(Method), y = Count, fill = Method)) +
+  geom_bar(stat = "identity", position="fill") +
+  theme_minimal() +
+  xlab("Year") +
+  ylab("Abundance") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, ))
+
+
+str(df1)
+
+unique(df$Method)
+
+df$Method[df$Method== "Kicknet 0.5mm"] <- "Kicknet"
+df$Method[df$Method== "Kicknet 1.5mm"] <- "Kicknet"
+df$Method[df$Method== "Standard invertebrate net"] <- "Kicknet"
+df$Method[df$Method== "Kicknet, 0.5mm mesh"] <- "Kicknet"
+df$Method[df$Method== "UK RIVPACS protocol"] <- "RIVPACS"
+df$Method[df$Method== "AQEM/STAR"] <- "AQEM"
+df$Method[df$Method== "adapted multi-habitat method (Cheshmedjiev et al., 2011)"] <- "Multi-habitat"
+df$Method[df$Method== "AFNOR XP T90-333 (2009, 2016)"] <- "AFNOR XP T90-333"
+df$Method[df$Method== "multiplate_artificial_substratum"] <- "Multiplate artificial substratum"
+df$Method[df$Method== "SUBS"] <- "Sub-sampling"
+
+# Calculate proportions
+df1$Proportion <- df1$Count / sum(df1$Count)
+
+
+# Create the plot
+p = ggplot(df1, aes(x = factor(1), y = Proportion, fill = Method)) +
+  geom_bar(stat = "identity", position="fill") +
+  xlab("Proportion of sampling methods") +
+  ylab("Sampling methods crayfish") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  guides(fill = guide_legend(title = "Methods", reverse = TRUE)) 
+
+
+
+sites = unique(df$site_id)
+
+df = readxl::read_excel('Fail_crayfish.xlsx', sheet = 'Sheet 1')
+methods = unique(df$Method)
+
+dff = readxl::read_excel('IAS_TAXA_data.xlsx', sheet = 'site_summary')
+dff= dff %>% filter(!site %in% sites)  %>% filter(TaxonomicRes== 'species')
+
+unique(dff$sampling_method_long)
+
+dff$sampling_method_long[dff$sampling_method_long== "Standard 3 min kick sample + 30 secs hand search"] <- "Kicknet"
+dff$sampling_method_long[dff$sampling_method_long== "Kicknet 1.5mm"] <- "Kicknet"
+dff$sampling_method_long[dff$sampling_method_long== "Kicknet 0.5mm"] <- "Kicknet"
+dff$sampling_method_long[dff$sampling_method_long== "Kicknet, 0.5mm mesh"] <- "Kicknet"
+dff$sampling_method_long[dff$sampling_method_long== "Kicknet and Hand sampling"] <- "Kicknet"
+dff$sampling_method_long[dff$sampling_method_long== "Standard invertebrate net"] <- "Kicknet"
+dff$sampling_method_long[dff$sampling_method_long== "AQEM/20"] <- "AQEM"
+dff$sampling_method_long[dff$sampling_method_long== "AQEM/STAR"] <- "AQEM"
+dff$sampling_method_long[dff$sampling_method_long== "adapted multi-habitat method (Cheshmedjiev et al., 2011)"] <- "Multi-habitat"
+dff$sampling_method_long[dff$sampling_method_long== "Modified AQEM/STAR (Haase et al., 2004)"] <- "AQEM"
+dff$sampling_method_long[dff$sampling_method_long== "Standardized quantitative sampling"] <- "AQEM"
+dff$sampling_method_long[dff$sampling_method_long== "Multi-habitat Kicknet (Mykra et al., 2006)"] <- "Multi-habitat"
+dff$sampling_method_long[dff$sampling_method_long== "Surber"] <- "Kicknet"
+dff$sampling_method_long[dff$sampling_method_long== "Standardized quantitative sampling (APHA-AWWA-WPCF, 1992)"] <- "AQEM"
+
+
+df11= dff %>% group_by(sampling_method_long) %>% summarise(Count=n())
+df11$Proportion <- df11$Count / sum(df11$Count)
+p2= ggplot(df11, aes(x = factor(1), y = Proportion, fill = sampling_method_long)) +
+  geom_bar(stat = "identity", position="fill") +
+  xlab("Proportion of sampling methods without crayfish") +
+  ylab("Sampling methods crayfish") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + theme_bw() + 
+  guides(fill = guide_legend(title = "Methods", reverse = TRUE)) 
+
+
+
+
+#######################################
+#the magic plot 
+
+str(df)
+df$site_id = as.factor(df$site_id)
+ggplot(df, aes(as.factor(year),as.factor(country))) + 
+  geom_point(aes(col=as.factor(country))) + theme_bw()
+
+
+ggplot(data = df, aes(x = year, y = site_id)) +
+  geom_point(aes(color = country), alpha = 0.7) + 
+  geom_line(aes(color = country), alpha = 0.7) +
+  theme_bw() + facet_wrap(~Alien)+
+  labs( x = "Year",
+       y = "Sites",  color = "country") +
+    scale_x_continuous(breaks=c(1980, 1985,1990,1995,2000,2005,2010,2015, 2020))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text = element_text(size=12),
+        axis.title = element_text(size= 14),
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank())
+#+ scale_color_brewer(palette = "Set3") 
+
+
+
+
+library(maps)
+library(rworldmap)
+library(rworldxtra)
+
+newmap <- getMap(resolution="high")
+par(mar=c(0.5,0.5,0.5,0.5))
+plot(newmap, col="wheat", border="black",bg="lightblue", 
+     xlim=c(5,40), ylim=c(30,63))
+
+
+
+
+unique(df$taxon)
+
+df1 = df %>% filter(taxon =="procambarus clarkii")
+df2 = df %>% filter(taxon =="orconectes limosus")
+df3 = df %>% filter(taxon =="pacifastacus leniusculus")
+df4 = df %>% filter(taxon =="astacus astacus")
+df5 = df %>% filter(taxon =="astacus leptodactylus")
+df6 = df %>% filter(taxon =="astacus torrentium")
+
+
+library(ggplot2)
+library(dplyr)
+library(ggspatial)
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+europe_map <- ne_countries(scale = "medium", returnclass = "sf") %>%
+  filter(continent == "Europe" | name == "Turkey" | 
+           name %in% c("Morocco", "Algeria", "Tunisia", "Libya", "Egypt"))
+
+europe_map$color <- ifelse(europe_map$name %in% c("Morocco", "Algeria", "Tunisia", "Libya", "Egypt", "Russia", "Turkey"),
+                           "grey80", "Wheat")
+
+setwd("C:/Users/isotoalmena/Downloads")
+riversData <- rgdal::readOGR("rivers_europe_37253.shp")
+riversData$line_width <- scales::rescale(riversData$Strahler, to = c(0.1, 1))
+riversData_sf <- st_as_sf(riversData)
+riversData1 <-riversData_sf %>% filter(line_width > 0.25)
+
+  
+plots = list()
+for (s in unique(df$taxon)) {
+  df1 = df %>% filter(taxon == s)
+
+p = ggplot() +
+  geom_sf(data = europe_map, aes(fill = color))+   scale_fill_identity()+ 
+  geom_sf(data = riversData1, aes(size = line_width), color = "steelblue2") + 
+  coord_sf() + theme_bw()+ xlim(-11,30) + ylim(36,60)+
+geom_point(data = df1, aes(x = Longitude, y = Latitude, color = year), size = 2) +
+  scale_color_gradient(low = "yellow", high = "red", name = "Year") + 
+  annotation_scale(location = "bl", width_hint = 0.5) +
+  annotation_north_arrow(location = "tl", 
+                         which_north = "true", pad_x = unit(0.75, "in"),
+                         pad_y = unit(0.5, "in"))
+plots[[s]] <- p
+}
+
+plots[[1]] + plots[[2]] + 
+  plots[[3]] + plots[[4]] + 
+  plots[[5]] + plots[[6]] 
+
+
+
+str(df1)
+
+
+####  map of all sites vs sites
+df <- df %>%
+  mutate(crayfish_detected = ifelse(taxon %in% species_list, "Yes", "No"))
+df0 = df %>%filter(crayfish_detected =="Yes")
+df00 = df %>%filter(crayfish_detected =="No")
+
+df0 = df0[!duplicated(df0$site_id), ]
+df00 = df00[!duplicated(df00$site_id), ]
+
+df <- df %>% arrange(desc(crayfish_detected))
+
+
+ggplot() +
+  geom_sf(data = europe_map, aes(fill = color))+   scale_fill_identity()+ 
+  geom_sf(data = riversData1, aes(size = line_width), color = "steelblue2") + 
+  coord_sf() + theme_bw() + xlim(-11,30) + ylim(36,60)+
+  geom_point(data = df00, aes(x = Longitude, y = Latitude), color = "gray26", size = 1, alpha = 0.75) + 
+  geom_point(data = df0, aes(x = Longitude, y = Latitude), color = "red", size = 1)+
+# scale_color_manual(values = c( "No" = "gray26", "Yes" = "red")) +
+
+  annotation_scale(location = "bl", width_hint = 0.5) +
+  annotation_north_arrow(location = "tl", 
+                         which_north = "true", pad_x = unit(0.75, "in"),
+                         pad_y = unit(0.5, "in"))
+
+
+europe_map <- st_as_sf(europe_map)
+
+st_geometry(europe_map)
+st_geometry(riversData1)
+names(riversData1)
+############################################
+
+sites_sampled_continuously <- df %>%
+  group_by(site_id) %>%
+  summarise(unique_years_sampled = n_distinct(year)) %>%
+  filter(unique_years_sampled > 1)
+
+sites_sampled_continuously
+
+
+df$Method[which(df$Method == "Kicknet, 0.5mm mesh")] = "Kicknet 0.5mm"
+df$Method[which(df$Method == "Kicknet")] = "Kicknet 0.5mm"
+df$Method[which(df$Method == "AQEM/STAR")] = "AQEM"
+
+
+reliable_methods <- df %>%
+  group_by(Method) %>%
+  summarise(Abund = mean(abundance),
+            richness = n_distinct(taxon))
+
+
+
+sample.single.occ <- df %>%
+  filter(Alien == "Y") %>%
+  arrange(site_id, year) %>%
+  group_by(site_id) %>%
+  filter(lag(taxon, default=first(taxon)) != taxon | lead(taxon, default=last(taxon)) != taxon)
+
+
+
+
+###
+setwd("C:/Users/isotoalmena/Desktop")
+df = readxl::read_excel('Global_dataset (1).xlsx')
+str(df)
+
+species_list <- c("astacidae gen. sp.", "astacus astacus", "astacus leptodactylus",
+                  "astacus torrentium", "pacifastacus sp.", "pacifastacus leniusculus",
+                  "procambarus clarkii", "procambarus sp.", "cambaridae gen. sp.",
+                  "orconectes limosus", "austropotamobius pallipes")
+
+calculate_stats <- function(species, data) {
+  filtered_data <- filter(data, taxon == species)
+  occurrences <- nrow(filtered_data)
+  time_series <- length(unique(filtered_data$site_id))
+  return(data.frame(Species = species, Occurrences = occurrences, TimeSeries = time_series))
+}
+
+# Aplicar la función a cada especie y combinar los resultados en un dataframe
+stats_df <- do.call(rbind, lapply(species_list, calculate_stats, data = df))
+
+df1 = df %>% filter(taxon %in% c("procambarus sp.", "cambaridae gen. sp.","pacifastacus sp.",
+                                 "astacidae gen. sp."))
+unique(df1$site_id)
+
+
+df1 = df %>% filter(taxon %in% species_list)
+unique(df1$taxon)
+unique(df1$site_id)
+
+df2 <- df1 %>%
+  mutate(Category = case_when(
+    grepl("pacifastacus sp", taxon, ignore.case = TRUE) ~ "astacidae",
+    grepl("astacidae gen. sp.", taxon, ignore.case = TRUE) ~ "astacidae",
+    grepl("pacifastacus", taxon, ignore.case = TRUE) ~ "astacidae",
+    grepl("austropotamobius", taxon, ignore.case = TRUE) ~ "astacidae",
+    grepl("leptodactylus", taxon, ignore.case = TRUE) ~ "astacidae",
+    grepl("astacus", taxon, ignore.case = TRUE) ~ "astacidae",
+    grepl("cambaridae", taxon, ignore.case = TRUE) ~ "Cambaridae",
+    grepl("procambarus sp", taxon, ignore.case = TRUE) ~ "Cambaridae",
+    grepl("orconectes", taxon, ignore.case = TRUE) ~ "Cambaridae",
+    grepl("procambarus", taxon, ignore.case = TRUE) ~ "Cambaridae",
+    #grepl("orconectes", taxon, ignore.case = TRUE) ~ "Orconectes",
+   # grepl("austropotamobius", taxon, ignore.case = TRUE) ~ "Austropotamobius",
+    TRUE ~ "Other"
+  ))
+
+
+# Calcular ocurrencias y series temporales para cada categoría
+stats_df <- df2 %>%
+  group_by(Category) %>%
+  summarize(Occurrences = n(),
+            TimeSeries = n_distinct(site_id))
+
+stats_df <- df1 %>%
+  group_by(taxon) %>%
+  summarize(Occurrences = n(),
+            TimeSeries = n_distinct(site_id))
+
+
+df1 %>% filter(taxon %in% c( "astacus astacus", "astacus leptodactylus",  "astacus torrentium",  "pacifastacus leniusculus",  "procambarus clarkii", 
+           "orconectes limosus", "austropotamobius pallipes")) %>% summarise(r = n_distinct(site_id),
+                                                                                              occ = n())
+
+# cambaridae
+df1 %>% filter(taxon %in% c( "procambarus sp.", "cambaridae gen. sp.")) %>% summarise(r = n_distinct(site_id),
+                                                                                               occ = n())
+
+# Astacidae
+df1 %>% filter(taxon %in% c("astacidae gen. sp.", "pacifastacus sp.")) %>% summarise(r = n_distinct(site_id),
+                                                                                      occ = n())
+unique_methods <- unique(c(crayfish_df$Method, crayfish_df2$Method, dff$Method))
+color_palette <- rainbow(length(unique_methods))
+names(color_palette) <- unique_methods
+
+palette1 <- brewer.pal(9, "Set1")
+palette2 <- brewer.pal(8, "Dark2")
+palette3 <- brewer.pal(12, "Paired")
+combined_palette <- c(palette1, palette2, palette3)
+
+if (length(unique_methods) > length(combined_palette)) {
+  combined_palette <- c(combined_palette, rainbow(length(unique_methods) - length(combined_palette)))
+}
+names(combined_palette) <- unique_methods
+
+
+
+######  time series catching native crayfish (species level) ####
+crayfish_df <- df %>%
+  filter(taxon %in% c("astacus astacus", "astacus leptodactylus",
+                      "astacus torrentium", "austropotamobius pallipes"))
+df %>% filter(site_id %in% unique(crayfish_df2$site_id)) %>% group_by(country) %>% summarise(min= min(year),
+                                                                                            max = max(year)) 
+single_year_gaps_by_site <- crayfish_df %>%
+  group_by(site_id) %>%
+  arrange(year) %>%
+  summarise(gaps = diff(year)) %>%
+  ungroup() %>%
+  summarise(count_single_gaps = sum(gaps == 1))
+
+p1= ggplot(crayfish_df, aes(x = "Crayfish", fill = Method)) +
+  geom_bar( color="black", size = 0.2) +
+  labs(x = "Taxa",
+       fill = "Methods") +
+  scale_fill_manual(values = combined_palette) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size= 14)) + theme(axis.text.x = element_blank())
+
+
+######  time series catching non-native  crayfish (species level) ####
+
+no_native_crayfish_species <- c("pacifastacus leniusculus","procambarus clarkii","orconectes limosus")
+
+crayfish_df2 <- df %>%
+  filter(taxon %in%  no_native_crayfish_species, Alien == "Y")
+
+single_year_gaps_by_site <- crayfish_df2 %>%
+  group_by(site_id) %>%
+  arrange(year) %>%
+  summarise(gaps = diff(year)) %>%
+  ungroup() %>%
+  summarise(count_single_gaps = sum(gaps == 1))
+
+p2= ggplot(crayfish_df2, aes(x = "Crayfish", fill = Method)) +
+  geom_bar( color="black", size = 0.2) +
+  labs(x = "Taxa",
+       fill = "Methods") +
+  theme_bw() +   scale_fill_manual(values = combined_palette) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size= 14)) + theme(axis.text.x = element_blank())
+
+
+
+##### (right) time series not reporting ANY crayfish (neither family or genus nor any level)  ####
+df1 = dff %>% filter(taxon %in% species_list)
+
+
+dff = readxl::read_excel('Global_dataset (1).xlsx')
+dfff = dff %>% filter(!site_id %in% unique(df1$site_id)) 
+
+unique(dfff$Method)
+
+dfff$Method[dfff$Method == "Standard 3 min kick sample + 30 secs hand search"] <- "Kicknet"
+dfff$Method[dfff$Method == "Kicknet 1.5mm"] <- "Kicknet"
+dfff$Method[dfff$Method == "Kicknet 0.5mm"] <- "Kicknet"
+dfff$Method[dfff$Method == "Kicknet, 0.5mm mesh"] <- "Kicknet"
+dfff$Method[dfff$Method == "Kicknet and Hand sampling"] <- "Kicknet"
+dfff$Method[dfff$Method == "Standard invertebrate net"] <- "Kicknet"
+dfff$Method[dfff$Method == "AQEM/20"] <- "AQEM"
+dfff$Method[dfff$Method == "AQEM/STAR"] <- "AQEM"
+dfff$Method[dfff$Method == "adapted multi-habitat method (Cheshmedjiev et al., 2011)"] <- "Multi-habitat"
+dfff$Method[dfff$Method == "Modified AQEM/STAR (Haase et al., 2004)"] <- "AQEM"
+dfff$Method[dfff$Method == "Standardized quantitative sampling"] <- "AQEM"
+dfff$Method[dfff$Method == "Multi-habitat Kicknet (Mykra et al., 2006)"] <- "Multi-habitat"
+dfff$Method[dfff$Method == "Surber"] <- "Kicknet"
+dfff$Method[dfff$Method == "Standardized quantitative sampling (APHA-AWWA-WPCF, 1992)"] <- "Kicknet"
+
+dfff$Method[dfff$Method == "Kicknet, 0.25mm mesh"] <- "Kicknet"
+dfff$Method[dfff$Method == "UK RIVPACS protocol"] <- "RIVPACS"
+dfff$Method[dfff$Method == "Multi-habitat Kicknet"] <- "Multi-habitat"
+dfff$Method[dfff$Method == "Standardized quantitative sampling (APHA-AWWA-WPCF, 1992)"] <- "AQEM"
+dfff1 = dfff %>% drop_na()
+p3= ggplot(data = dfff1, aes(x = "Crayfish", fill = Method)) + 
+  geom_bar() +
+  labs(x = "Taxa",
+       fill = "Methods") +
+  theme_bw() +   scale_fill_manual(values = combined_palette) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size= 14)) + theme(axis.text.x = element_blank())
+
+p1+p2+p3
+
+##  pallipes 
+df1
+
+avg_series_duration <- df1 %>%
+  group_by(site_id, taxon) %>%
+  summarize(series_duration = max(year) - min(year)) %>%
+  ungroup() %>%
+  summarize(avg_duration = mean(series_duration))
+
+# 4. Abundancia Promedio por Ocurrencia
+avg_abundance <- mean(df1$abundance, na.rm = TRUE)
+
+# 5. Periodo Promedio de Registros
+avg_period <- max(df1$year) - min(df1$year)
+
+a= df %>% filter(site_id %in% unique(df1$site_id)) %>% group_by(site_id) %>%
+  summarize(Firs_year = min(year)) 
+b = df1 %>% group_by(site_id) %>%
+  summarize(Firs_year = min(year)) 
+
+
+a$time = b$Firs_year - a$Firs_year
+mean(a$time)
+
+
+
+individual_records <- crayfish_df2 %>%
+  arrange(site_id, year) %>%
+  group_by(site_id) %>%
+  filter(year != lag(year, default = first(year))) %>%
+  ungroup()
+
+# Count the number of individual records
+num_individual_records <- nrow(individual_records)
+
+

@@ -1,4 +1,4 @@
-## Are long-term biomonitoring efforts overlooking crayfish in European rivers?", has now been assessed
+## Are long-term biomonitoring efforts overlooking crayfish in European rivers?
 
 Phillip J. Haubrock1,2,3,‡, Ismael Soto1, Irmak Kurtul 4,5, Antonín Kouba1
 
